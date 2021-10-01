@@ -64,7 +64,7 @@ if choix == 1:
 	nom_fichier = saisie or nom_defaut
 	saisie = raw_input("Entrez le message [%s]"%message_defaut)
 	message_a_traiter = saisie or message_defaut
-	print "Longueur message : ",len(message_a_traiter)
+	print("Longueur message : ",len(message_a_traiter))
 	mon_image = Image.open(nom_fichier)
 	cacher(mon_image, message_a_traiter)
 	mon_image.save("stegano_"+nom_fichier)
@@ -75,4 +75,4 @@ else :
 	message_a_traiter = int(saisie)
 	mon_image = Image.open(nom_fichier)
 	message_retrouve = recuperer(mon_image, message_a_traiter)
-	print message_retrouve
+	print (message_retrouve)
