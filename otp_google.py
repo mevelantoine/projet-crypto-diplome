@@ -18,5 +18,9 @@ def check_otp(otp):
 
 secret = ''.join(random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ') for _ in range(16))
 otp = get_hotp_token(secret, intervals_no=1)
+f = open("otp.txt","w")
+f.write(str(otp))
+f.close()
+
 print ("Votre OTP est "+ str(otp))
-check_otp(otp)
+#check_otp(otp)
