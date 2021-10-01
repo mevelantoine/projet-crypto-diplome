@@ -5,7 +5,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 
-os.chdir("H:\Cours\ING3\Cryptographie\projet-crypto-diplome")
+os.chdir("H:\Documents\ING3 - CS\Crypto\projet-crypto-diplome")
 
 print("Entrez votre OTP : ")
 otpEcole = input()
@@ -25,8 +25,9 @@ if (True): #Ajouter l'application d'OTP
 
     attestation = Image.open("test.png")
     draw = ImageDraw.Draw(attestation)
-    draw.text((0, 0),"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",(0,0,0),font=ImageFont.truetype("sans-serif.ttf", 50))
-    draw.line(((0,12),(500,13)))
+    draw.text((500, 430),"CERTIFICAT DÉLIVRÉ",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
+    draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
+    draw.text((550, 680),"VIKEN TOPSAKAL",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
     attestation.save('sample-out.jpg')
 
 
