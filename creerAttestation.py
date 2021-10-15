@@ -114,6 +114,9 @@ root = tk.Tk()
 root.title("Application de création de diplôme")
 root.geometry("1600x900+0+0")
 
+frameCreation = tk.Frame(relief=tk.RIDGE,borderwidth=5,padx=10,pady=10)
+frameDecodage = tk.Frame(relief=tk.RIDGE,borderwidth=5,pady=10)
+
 ##Fenêtre de demande d'OTP initiale
 otpWindow= tk.Toplevel(root)
 otpWindow.geometry("250x100+0+0")
@@ -132,28 +135,29 @@ otpWindow.grab_set()
 
 ##Elements de la fenêtre racine
 nom = tk.StringVar()
-textNom=tk.Label(root,text="Nom :")
-inputNom = tk.Entry(root,textvariable=nom)
+textNom=tk.Label(frameCreation,text="Nom :")
+inputNom = tk.Entry(frameCreation,textvariable=nom)
  
 prenom = tk.StringVar()
-textPrenom=tk.Label(root,text="Prénom :")
-inputPrenom = tk.Entry(root,textvariable=prenom)
+textPrenom=tk.Label(frameCreation,text="Prénom :")
+inputPrenom = tk.Entry(frameCreation,textvariable=prenom)
 
 formation = tk.StringVar()
 optionsFormations=['ING1-GI', 'ING1-GM',"ING2-GSI", "ING2-SIE","ING3-CS","ING3-INEM","ING3- VISUAL"]
-textFormations = tk.Label(root,text="Formation : ")
-dropFormations = tk.OptionMenu(root, formation, *optionsFormations)
+textFormations = tk.Label(frameCreation,text="Formation : ")
+dropFormations = tk.OptionMenu(frameCreation, formation, *optionsFormations)
 
 mail = tk.StringVar()
-textMail = tk.Label(root,text="Adresse e-mail :",pady=30)
-inputMail = tk.Entry(root,textvariable=mail)
+textMail = tk.Label(frameCreation,text="Adresse e-mail :",pady=30)
+inputMail = tk.Entry(frameCreation,textvariable=mail)
 
-buttonValider = tk.Button(root,text="Valider",command=partial(genererDiplome,nom,prenom,formation))
+buttonValider = tk.Button(frameCreation,text="Valider",command=partial(genererDiplome,nom,prenom,formation))
 
 nomFichier = ""
-textChoisir = tk.Label(root,text="Choisissez un diplôme à vérifier")
-buttonChoisir = tk.Button(root,text="Choisir un fichier",command=partial(choosefile,nomFichier))
-textNomFichier = tk.Label(root)
+textChoisir = tk.Label(frameDecodage,text="Choisissez un diplôme à vérifier")
+buttonChoisir = tk.Button(frameDecodage,text="Choisir un fichier",command=partial(choosefile,nomFichier))
+textNomFichier = tk.Label(frameDecodage)
+
 
 textNom.grid(row=0,column=0)
 inputNom.grid(row=0,column=1)
@@ -170,6 +174,8 @@ textChoisir.grid(row=11,column=0)
 buttonChoisir.grid(row=12,column=0)
 textNomFichier.grid(row=13,column=0)
 
+frameCreation.grid(row=0,column=0,sticky="w")
+frameDecodage.grid(row=1,column=0,sticky="w")
 checkMail()
 root.mainloop()
 
