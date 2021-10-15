@@ -2,12 +2,12 @@ import tkinter as tk
 import qrcode as qr
 import re
 import time
-from tkinter.constants import CENTER
-from typing import Text
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from functools import partial
+from tkinter.filedialog import askopenfilename
+from tkinter.constants import CENTER
 
 ##FONCTIONS
 #Fonctions de stéganographie
@@ -102,6 +102,11 @@ def checkMail():
         inputMail.config(background="#FF5252")
     root.after(100,checkMail)
 
+def choosefile(filename):
+    tk.Tk().withdraw() 
+    filename = askopenfilename()
+    textNomFichier.configure(text=filename)
+
 
 ##MAIN
 #Fenêtre racine
@@ -145,6 +150,11 @@ inputMail = tk.Entry(root,textvariable=mail)
 
 buttonValider = tk.Button(root,text="Valider",command=partial(genererDiplome,nom,prenom,formation))
 
+nomFichier = ""
+textChoisir = tk.Label(root,text="Choisissez un diplôme à vérifier")
+buttonChoisir = tk.Button(root,text="Choisir un fichier",command=partial(choosefile,nomFichier))
+textNomFichier = tk.Label(root)
+
 textNom.grid(row=0,column=0)
 inputNom.grid(row=0,column=1)
 textPrenom.grid(row=1,column=0)
@@ -155,6 +165,10 @@ textMail.grid(row=3,column=0)
 inputMail.grid(row=3,column=1)
 
 buttonValider.grid(row=10,column=0)
+
+textChoisir.grid(row=11,column=0)
+buttonChoisir.grid(row=12,column=0)
+textNomFichier.grid(row=13,column=0)
 
 checkMail()
 root.mainloop()
