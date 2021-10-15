@@ -9,6 +9,58 @@ from PIL import ImageFont
 from PIL import ImageDraw
 from functools import partial
 
+##FONCTIONS
+#Fonctions de stéganographie
+
+def vers_8bit(c):
+	chaine_binaire = bin(ord(c))[2:]
+	return "0"*(8-len(chaine_binaire))+chaine_binaire
+
+def modifier_pixel(pixel, bit):
+	# on modifie que la composante rouge
+	r_val = pixel[0]
+	rep_binaire = bin(r_val)[2:]
+	rep_bin_mod = rep_binaire[:-1] + bit
+	r_val = int(rep_bin_mod, 2)
+	return tuple([r_val] + list(pixel[1:]))
+
+def recuperer_bit_pfaible(pixel):
+	r_val = pixel[0]
+	return bin(r_val)[-1]
+
+def cacher(image,message):
+	dimX,dimY = image.size
+	im = image.load()
+	message_binaire = ''.join([vers_8bit(c) for c in message])
+	posx_pixel = 0
+	posy_pixel = 0
+	for bit in message_binaire:
+		im[posx_pixel,posy_pixel] = modifier_pixel(im[posx_pixel,posy_pixel],bit)
+		posx_pixel += 1
+		if (posx_pixel == dimX):
+			posx_pixel = 0
+			posy_pixel += 1
+		assert(posy_pixel < dimY)
+
+def recuperer(image,taille):
+	message = ""
+	dimX,dimY = image.size
+	im = image.load()
+	posx_pixel = 0
+	posy_pixel = 0
+	for rang_car in range(0,taille):
+		rep_binaire = ""
+		for rang_bit in range(0,8):
+			rep_binaire += recuperer_bit_pfaible(im[posx_pixel,posy_pixel])
+			posx_pixel +=1
+			if (posx_pixel == dimX):
+				posx_pixel = 0
+				posy_pixel += 1
+		message += chr(int(rep_binaire, 2))
+	return message
+
+
+## Fonctions d'OTP
 def validate(window,root,otp):
     if (True):
          window.destroy()
@@ -16,6 +68,7 @@ def validate(window,root,otp):
     else:
         pass
 
+#Fonctions de génération d'image
 def genererDiplome(nom,prenom,formation):
     attestation = Image.open("assets/template.png")
     draw = ImageDraw.Draw(attestation)
@@ -25,12 +78,12 @@ def genererDiplome(nom,prenom,formation):
     draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
     draw.text((550, 680),nom.get().upper()+" "+prenom.get().upper(),(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
 
-    #Création de la signature
+    #Stéganographie
     timestamp = str(int(time.time()))
     stegano = nom.get()+prenom.get()+formation.get()+timestamp
     while (len(stegano) < 64):
         stegano += "-"
-    print(stegano)
+    cacher(attestation,stegano)
 
     #Ajout du QRCode
     att_l, att_h = attestation.size
@@ -41,6 +94,7 @@ def genererDiplome(nom,prenom,formation):
 
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.jpg')
 
+#Fonctions d'affichage
 def checkMail():
     if re.match("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$",mail.get()):
         inputMail.config(background="#3AC9A4")
@@ -48,6 +102,8 @@ def checkMail():
         inputMail.config(background="#FF5252")
     root.after(100,checkMail)
 
+
+##MAIN
 #Fenêtre racine
 root = tk.Tk()
 root.title("Application de création de diplôme")
