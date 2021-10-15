@@ -1,6 +1,7 @@
 import tkinter as tk
-#import qrcode as qr
+import qrcode as qr
 import re
+import time
 from tkinter.constants import CENTER
 from typing import Text
 from PIL import Image
@@ -8,19 +9,37 @@ from PIL import ImageFont
 from PIL import ImageDraw
 from functools import partial
 
-def validate(window):
+def validate(window,root,otp):
     if (True):
          window.destroy()
+         root.lift()
     else:
         pass
 
 def genererDiplome(nom,prenom,formation):
-    attestation = Image.open("test.png")
+    attestation = Image.open("assets/template.png")
     draw = ImageDraw.Draw(attestation)
-    draw.text((500, 430),"CERTIFICAT DÉLIVRÉ",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
-    draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
-    draw.text((550, 680),nom.get().upper()+" "+prenom.get().upper(),(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
-    attestation.save(nom.get()+prenom.get()+'Diplome'+formation.get()+'.jpg')
+    
+    #Ajout du texte
+    draw.text((500, 430),"CERTIFICAT DÉLIVRÉ",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
+    draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
+    draw.text((550, 680),nom.get().upper()+" "+prenom.get().upper(),(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
+
+    #Création de la signature
+    timestamp = str(int(time.time()))
+    stegano = nom.get()+prenom.get()+formation.get()+timestamp
+    while (len(stegano) < 64):
+        stegano += "-"
+    print(stegano)
+
+    #Ajout du QRCode
+    att_l, att_h = attestation.size
+    imgQR = qr.make(nom.get()+prenom.get()+formation.get())
+    offset = (1380,880)
+    attestation.paste(imgQR,offset)
+
+
+    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.jpg')
 
 def checkMail():
     if re.match("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$",mail.get()):
@@ -29,22 +48,20 @@ def checkMail():
         inputMail.config(background="#FF5252")
     root.after(100,checkMail)
 
-# Regex check email : .*\@.*\.com
-
 #Fenêtre racine
 root = tk.Tk()
 root.title("Application de création de diplôme")
-root.geometry("1600x900+100+50")
+root.geometry("1600x900+0+0")
 
 ##Fenêtre de demande d'OTP initiale
 otpWindow= tk.Toplevel(root)
-otpWindow.geometry("250x100+750+400")
+otpWindow.geometry("250x100+0+0")
 otpWindow.attributes('-topmost', True)
 
 otp = tk.IntVar()
 textOTP = tk.Label(otpWindow,text="Entrez votre OTP")
 inputOTP = tk.Entry(otpWindow,textvariable=otp)
-buttonOTP = tk.Button(otpWindow,text="Valider",command=otpWindow.destroy)
+buttonOTP = tk.Button(otpWindow,text="Valider",command=partial(validate,otpWindow,root,otp))
 
 textOTP.place(relx=0.5, rely=0.1, anchor=CENTER)
 inputOTP.place(relx=0.5, rely=0.25, anchor=CENTER)
@@ -62,7 +79,7 @@ textPrenom=tk.Label(root,text="Prénom :")
 inputPrenom = tk.Entry(root,textvariable=prenom)
 
 formation = tk.StringVar()
-optionsFormations=['ING1 GI', 'ING1 GM',"ING2 GSI", "ING2 SIE","ING3 CS","ING3 INEM","ING3 VISUAL"]
+optionsFormations=['ING1-GI', 'ING1-GM',"ING2-GSI", "ING2-SIE","ING3-CS","ING3-INEM","ING3- VISUAL"]
 textFormations = tk.Label(root,text="Formation : ")
 dropFormations = tk.OptionMenu(root, formation, *optionsFormations)
 
