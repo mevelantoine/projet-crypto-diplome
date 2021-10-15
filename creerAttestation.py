@@ -80,19 +80,20 @@ def genererDiplome(nom,prenom,formation):
 
     #Stéganographie
     timestamp = str(int(time.time()))
-    stegano = nom.get()+prenom.get()+formation.get()+timestamp
+    stegano = nom.get()+prenom.get()+formation+timestamp
     while (len(stegano) < 64):
         stegano += "-"
     cacher(attestation,stegano)
 
     #Ajout du QRCode
     att_l, att_h = attestation.size
-    imgQR = qr.make(nom.get()+prenom.get()+formation.get())
+    #TODO : Signer avant de mettre dans le QRCODE
+    imgQR = qr.make(nom.get()+prenom.get()+formation)
     offset = (1380,880)
     attestation.paste(imgQR,offset)
 
 
-    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.jpg')
+    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
 
 #Fonctions d'affichage
 def checkMail():
@@ -100,7 +101,12 @@ def checkMail():
         inputMail.config(background="#3AC9A4")
     else:
         inputMail.config(background="#FF5252")
-    root.after(100,checkMail)
+    if isOpen: #On ne lance pas d'alarme si la fenêtre est fermée
+        root.after(100,checkMail)
+
+def fermetureFenetre():
+    isOpen=False
+    root.destroy()
 
 def choosefile(filename):
     tk.Tk().withdraw() 
@@ -113,9 +119,10 @@ def choosefile(filename):
 root = tk.Tk()
 root.title("Application de création de diplôme")
 root.geometry("1600x900+0+0")
+isOpen=True
 
-frameCreation = tk.Frame(relief=tk.RIDGE,borderwidth=5,padx=10,pady=10)
-frameDecodage = tk.Frame(relief=tk.RIDGE,borderwidth=5,pady=10)
+frameCreation = tk.LabelFrame(relief=tk.RIDGE,borderwidth=5,padx=10,pady=10,text="Création de diplôme")
+frameDecodage = tk.LabelFrame(relief=tk.RIDGE,borderwidth=5,pady=10,text="Vérification de diplôme")
 
 ##Fenêtre de demande d'OTP initiale
 otpWindow= tk.Toplevel(root)
@@ -142,10 +149,13 @@ prenom = tk.StringVar()
 textPrenom=tk.Label(frameCreation,text="Prénom :")
 inputPrenom = tk.Entry(frameCreation,textvariable=prenom)
 
-formation = tk.StringVar()
-optionsFormations=['ING1-GI', 'ING1-GM',"ING2-GSI", "ING2-SIE","ING3-CS","ING3-INEM","ING3- VISUAL"]
+#formation = tk.StringVar()
+optionsFormations=['ING1-GI', 'ING1-GM',"ING2-GSI", "ING2-SIE","ING3-CS","ING3-INEM","ING3-VISUAL"]
 textFormations = tk.Label(frameCreation,text="Formation : ")
-dropFormations = tk.OptionMenu(frameCreation, formation, *optionsFormations)
+#dropFormations = tk.OptionMenu(frameCreation, formation, *optionsFormations)
+listbox = tk.Listbox(frameCreation)
+listbox.insert(tk.END, *optionsFormations)
+formation = listbox.get(tk.ACTIVE)
 
 mail = tk.StringVar()
 textMail = tk.Label(frameCreation,text="Adresse e-mail :",pady=30)
@@ -164,7 +174,7 @@ inputNom.grid(row=0,column=1)
 textPrenom.grid(row=1,column=0)
 inputPrenom.grid(row=1,column=1)
 textFormations.grid(row=2,column=0)
-dropFormations.grid(row=2,column=1)
+listbox.grid(row=2,column=1)
 textMail.grid(row=3,column=0)
 inputMail.grid(row=3,column=1)
 
@@ -176,6 +186,8 @@ textNomFichier.grid(row=13,column=0)
 
 frameCreation.grid(row=0,column=0,sticky="w")
 frameDecodage.grid(row=1,column=0,sticky="w")
+
+root.protocol("WM_DELETE_WINDOW", fermetureFenetre)
 checkMail()
 root.mainloop()
 
