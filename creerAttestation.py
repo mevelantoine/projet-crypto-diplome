@@ -4,6 +4,7 @@ import re
 import time
 import requests
 import rsa
+import os
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -71,7 +72,7 @@ def validate(window,root,otp):
          window.destroy()
          root.lift()
     else:
-        tk.messagebox.showerror(title="SUCE", message="Bah non bâtard")
+        tk.messagebox.showerror(title="Erreur", message="OTP non valide")
 
 #Fonctions de génération d'image
 def genererDiplome(nom,prenom,formation):
@@ -115,8 +116,11 @@ def genererDiplome(nom,prenom,formation):
 
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
 
-def verifierDiplome(filename):
-    print("aaaaaaaaaaaaaaaa")
+def verifierDiplome():
+    global emplacementFichier
+    print(emplacementFichier)
+    fichier = Image.open(open(emplacementFichier, 'rb'))
+    print(recuperer(fichier,64))
 
 #Fonctions d'affichage
 def checkMail():
@@ -125,17 +129,21 @@ def checkMail():
     else:
         inputMail.config(background="#FF5252")
 
-def fermetureFenetre(target):
+def fermetureFenetre():
     isOpen=False
-    target.destroy()
+    root.quit()
 
-def choosefile(filename):
+def choosefile():
+    global emplacementFichier 
     tk.Tk().withdraw()
-    #filename = askopenfilename()
-    filename = "D:\_Cours\ING3\projet-crypto-diplome\diplomes\MevelAntoineDiplomeING3-VISUAL.jpg"
-    textNomFichier.configure(text=filename)
+    emplacementFichier = askopenfilename()
+    textNomFichier.configure(text=emplacementFichier)
+    print(emplacementFichier)
 
 ##MAIN
+
+emplacementFichier=""
+
 #Fenêtre racine
 root = tk.Tk()
 root.title("Application de création de diplôme")
@@ -160,7 +168,7 @@ inputOTP.place(relx=0.5, rely=0.25, anchor=CENTER)
 buttonOTP.place(relx=0.5, rely=0.5,anchor=CENTER)
 otpWindow.protocol("WM_DELETE_WINDOW", fermetureFenetre)
 otpWindow.resizable(False, False)
-#otpWindow.grab_set()
+otpWindow.grab_set()
 
 ##Elements de la fenêtre racine
 nom = tk.StringVar()
@@ -187,10 +195,9 @@ buttonValider = tk.Button(frameCreation,text="Valider",command=partial(genererDi
 
 nomFichier = ""
 textChoisir = tk.Label(frameDecodage,text="Choisissez un diplôme à vérifier")
-buttonChoisir = tk.Button(frameDecodage,text="Choisir un fichier",command=partial(choosefile,nomFichier))
+buttonChoisir = tk.Button(frameDecodage,text="Choisir un fichier",command=choosefile)
 textNomFichier = tk.Label(frameDecodage)
-buttonVerifier = tk.Button(frameDecodage,text="Valider",command=partial(verifierDiplome,nomFichier))
-
+buttonVerifier = tk.Button(frameDecodage,text="Valider",command=verifierDiplome)
 
 textNom.grid(row=0,column=0)
 inputNom.grid(row=0,column=1)
@@ -211,7 +218,7 @@ buttonVerifier.grid(row=14,column=0)
 frameCreation.grid(row=0,column=0,sticky="w")
 frameDecodage.grid(row=1,column=0,sticky="w")
 
-root.protocol("WM_DELETE_WINDOW", partial(fermetureFenetre, root))
+root.protocol("WM_DELETE_WINDOW", fermetureFenetre)
 checkMail()
 root.mainloop()
 
