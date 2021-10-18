@@ -64,8 +64,9 @@ def recuperer(image,taille):
 
 ## Fonctions d'OTP
 def validate(window,root,otp):
-    r = requests.get('http://192.168.1.97/verify?otp='+str(otp.get()))
-    if (r.status_code == 200):
+    #r = requests.get('http://192.168.1.97/verify?otp='+str(otp.get()))
+    #if (r.status_code == 200):
+    if (True):
          window.destroy()
          root.lift()
     else:
@@ -98,24 +99,25 @@ def genererDiplome(nom,prenom,formation):
 
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
 
+def verifierDiplome(filename):
+    print("aaaaaaaaaaaaaaaa")
+
 #Fonctions d'affichage
 def checkMail():
     if re.match("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$",mail.get()):
         inputMail.config(background="#3AC9A4")
     else:
         inputMail.config(background="#FF5252")
-    if isOpen: #On ne lance pas d'alarme si la fenêtre est fermée
-        root.after(100,checkMail)
 
-def fermetureFenetre():
+def fermetureFenetre(target):
     isOpen=False
-    root.destroy()
+    target.destroy()
 
 def choosefile(filename):
     tk.Tk().withdraw()
-    filename = askopenfilename()
+    #filename = askopenfilename()
+    filename = "D:\_Cours\ING3\projet-crypto-diplome\diplomes\MevelAntoineDiplomeING3-VISUAL.jpg"
     textNomFichier.configure(text=filename)
-
 
 ##MAIN
 #Fenêtre racine
@@ -140,8 +142,9 @@ buttonOTP = tk.Button(otpWindow,text="Valider",command=partial(validate,otpWindo
 textOTP.place(relx=0.5, rely=0.1, anchor=CENTER)
 inputOTP.place(relx=0.5, rely=0.25, anchor=CENTER)
 buttonOTP.place(relx=0.5, rely=0.5,anchor=CENTER)
+otpWindow.protocol("WM_DELETE_WINDOW", fermetureFenetre)
 otpWindow.resizable(False, False)
-otpWindow.grab_set()
+#otpWindow.grab_set()
 
 ##Elements de la fenêtre racine
 nom = tk.StringVar()
@@ -170,6 +173,7 @@ nomFichier = ""
 textChoisir = tk.Label(frameDecodage,text="Choisissez un diplôme à vérifier")
 buttonChoisir = tk.Button(frameDecodage,text="Choisir un fichier",command=partial(choosefile,nomFichier))
 textNomFichier = tk.Label(frameDecodage)
+buttonVerifier = tk.Button(frameDecodage,text="Valider",command=partial(verifierDiplome,nomFichier))
 
 
 textNom.grid(row=0,column=0)
@@ -179,18 +183,19 @@ inputPrenom.grid(row=1,column=1)
 textFormations.grid(row=2,column=0)
 listbox.grid(row=2,column=1)
 textMail.grid(row=3,column=0)
-inputMail.grid(row=3,column=1)
+inputMail.grid(row=3,column=1)  az&é²
 
 buttonValider.grid(row=10,column=0)
 
 textChoisir.grid(row=11,column=0)
 buttonChoisir.grid(row=12,column=0)
 textNomFichier.grid(row=13,column=0)
+buttonVerifier.grid(row=14,column=0)
 
 frameCreation.grid(row=0,column=0,sticky="w")
 frameDecodage.grid(row=1,column=0,sticky="w")
 
-root.protocol("WM_DELETE_WINDOW", fermetureFenetre)
+root.protocol("WM_DELETE_WINDOW", partial(fermetureFenetre, root))
 checkMail()
 root.mainloop()
 
