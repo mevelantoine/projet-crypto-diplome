@@ -3,6 +3,7 @@ import qrcode as qr
 import re
 import time
 import requests
+import rsa
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -92,9 +93,24 @@ def genererDiplome(nom,prenom,formation):
     #Ajout du QRCode
     att_l, att_h = attestation.size
     #TODO : Signer avant de mettre dans le QRCODE
-    imgQR = qr.make(nom.get()+prenom.get()+formation)
-    offset = (1380,880)
-    attestation.paste(imgQR,offset)
+    (pubkey, privkey) = rsa.newkeys(512)
+    info = nom.get()+prenom.get()+formation
+    infoEncoded = info.encode()
+    print('-------info non signe : '+str(info))
+    infoSigne = rsa.sign(infoEncoded, privkey, 'SHA-256')
+    print('+++++++info signee : '+str(infoSigne))
+    #test pour check si le verify fonctionne
+    test = "super message".encode()
+    try: 
+        rsa.verify(infoEncoded, infoSigne, pubkey)
+    except:
+        print("Verify ERROR")
+    else:
+        print('Verify OK')
+        imgQR = qr.make(infoSigne)
+        offset = (1380,880)
+        attestation.paste(imgQR,offset)
+        attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
 
 
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
@@ -183,7 +199,7 @@ inputPrenom.grid(row=1,column=1)
 textFormations.grid(row=2,column=0)
 listbox.grid(row=2,column=1)
 textMail.grid(row=3,column=0)
-inputMail.grid(row=3,column=1)  az&é²
+inputMail.grid(row=3,column=1)
 
 buttonValider.grid(row=10,column=0)
 
