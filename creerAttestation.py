@@ -2,12 +2,14 @@ import tkinter as tk
 import qrcode as qr
 import re
 import time
+import requests
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from functools import partial
 from tkinter.filedialog import askopenfilename
 from tkinter.constants import CENTER
+from tkinter import messagebox
 
 ##FONCTIONS
 #Fonctions de stéganographie
@@ -62,17 +64,18 @@ def recuperer(image,taille):
 
 ## Fonctions d'OTP
 def validate(window,root,otp):
-    if (True):
+    r = requests.get('http://192.168.1.97/verify?otp='+str(otp.get()))
+    if (r.status_code == 200):
          window.destroy()
          root.lift()
     else:
-        pass
+        tk.messagebox.showerror(title="SUCE", message="Bah non bâtard")
 
 #Fonctions de génération d'image
 def genererDiplome(nom,prenom,formation):
     attestation = Image.open("assets/template.png")
     draw = ImageDraw.Draw(attestation)
-    
+
     #Ajout du texte
     draw.text((500, 430),"CERTIFICAT DÉLIVRÉ",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
     draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
@@ -109,7 +112,7 @@ def fermetureFenetre():
     root.destroy()
 
 def choosefile(filename):
-    tk.Tk().withdraw() 
+    tk.Tk().withdraw()
     filename = askopenfilename()
     textNomFichier.configure(text=filename)
 
@@ -137,14 +140,14 @@ buttonOTP = tk.Button(otpWindow,text="Valider",command=partial(validate,otpWindo
 textOTP.place(relx=0.5, rely=0.1, anchor=CENTER)
 inputOTP.place(relx=0.5, rely=0.25, anchor=CENTER)
 buttonOTP.place(relx=0.5, rely=0.5,anchor=CENTER)
-otpWindow.resizable(False, False) 
+otpWindow.resizable(False, False)
 otpWindow.grab_set()
 
 ##Elements de la fenêtre racine
 nom = tk.StringVar()
 textNom=tk.Label(frameCreation,text="Nom :")
 inputNom = tk.Entry(frameCreation,textvariable=nom)
- 
+
 prenom = tk.StringVar()
 textPrenom=tk.Label(frameCreation,text="Prénom :")
 inputPrenom = tk.Entry(frameCreation,textvariable=prenom)
