@@ -8,6 +8,9 @@ import os
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
+from Crypto.Hash import SHA512
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
 from functools import partial
 from tkinter.filedialog import askopenfilename
 from tkinter.constants import CENTER
@@ -93,17 +96,23 @@ def genererDiplome(nom,prenom,formation):
 
     #Ajout du QRCode
     att_l, att_h = attestation.size
-    #TODO : Signer avant de mettre dans le QRCODE
-    (pubkey, privkey) = rsa.newkeys(512)
     info = nom.get()+prenom.get()+formation
     infoEncoded = info.encode()
+
+    key_pub = RSA.importKey(open("certificates/newcert.pem", "r").read(), passphrase="test")
+
+    key_priv = RSA.importKey(open("certificates/newkey.pem", "r").read(), passphrase="test")
+
+    h = SHA512.new(infoEncoded)
+    infoSigne = PKCS1_v1_5.new(key_priv).sign(h)
+
     print('-------info non signe : '+str(info))
-    infoSigne = rsa.sign(infoEncoded, privkey, 'SHA-256')
+    #infoSigne = rsa.sign(infoEncoded, key_priv, 'SHA-256')
     print('+++++++info signee : '+str(infoSigne))
-    #test pour check si le verify fonctionne
-    test = "super message".encode()
+    #test pour check si le verify fonctionne7
+
     try: 
-        rsa.verify(infoEncoded, infoSigne, pubkey)
+        rsa.verify(infoEncoded, infoSigne, key_pub)
     except:
         print("Verify ERROR")
     else:
