@@ -326,3 +326,5 @@ node_modules/vary/index.js
 node_modules/vary/LICENSE
 node_modules/vary/package.json
 node_modules/vary/README.md
+certificates/newcert.pem
+certificates/newkey.pem
