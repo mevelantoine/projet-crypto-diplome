@@ -3,6 +3,7 @@ import qrcode as qr
 import re
 import requests
 import os
+import base64
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -121,6 +122,15 @@ def genererDiplome(nom,prenom,formation):
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
 
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
+
+    attestationToEncode = open("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png', "rb").read()
+    attestationEncoded = base64.b64decode(attestationToEncode)
+    contenu = open("contenu.txt", "w")
+    contenu.write("Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\n\r\n"+str(attestationEncoded))
+    contenu.close()
+    #server = smtplib.SMTP_SSL()
+    #server.sendmail("diplome@gmail.com", "vtopsakalvi@cy-tech.fr", message_securise)
+    #server.quit()
 
 def verifierDiplome():
     global emplacementFichier
