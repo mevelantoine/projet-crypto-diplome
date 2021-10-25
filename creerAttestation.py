@@ -108,8 +108,8 @@ def genererDiplome(nom,prenom,formation):
         print("Verify ERROR")
     else:
         print('Verify OK')
-        imgQR = qr.make(infoSigne)
-        offset = (1380,880)
+        imgQR = qr.make(infoSigne, box_size=5, border=2)
+        offset = (1415,930)
         attestation.paste(imgQR,offset)
         attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.png')
 
