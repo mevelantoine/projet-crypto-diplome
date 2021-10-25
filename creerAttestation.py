@@ -1,10 +1,8 @@
 import tkinter as tk
 import qrcode as qr
 import re
-import time
 import requests
-import rsa
-import os
+import subprocess
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -86,15 +84,24 @@ def genererDiplome(nom,prenom,formation):
     draw.text((500, 430),"CERTIFICAT DÉLIVRÉ",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
     draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
     draw.text((550, 680),nom.get().upper()+" "+prenom.get().upper(),(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
+    draw.text((740, 820),formation.get().upper(),(0,0,0), font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
+    
+    processQuery = subprocess.Popen(['openssl','ts','-query','-data','assets/template.png','-no_nonce','-sha512','-cert', '-out', 'file.tsq'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    processResponse = subprocess.Popen(['curl', '-H', '"Content-Type: application/timestamp-query"', '--data-binary', "'@file.tsq'",'https://freetsa.org/tsr', '-o' 'file.tsr' ],stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        
+    strQuery = open("file.tsq","rb").read()
+    strResponse = open("file.tsr","rb").read()
+    #Stéganographie : nom prenom formation timestamp
 
-    #Stéganographie
-    timestamp = str(int(time.time()))
-    stegano = nom.get()+prenom.get()+formation.get()+timestamp
-    while (len(stegano) < 64):
-        stegano += "-"
+    bloc = nom.get()+" "+prenom.get()+formation.get()
+    while (len(bloc) < 64):
+        bloc += "-"
+    
+    stegano =  str(strQuery) + "||" + str(strResponse)
+    print(len(strQuery),len(strResponse))
     cacher(attestation,stegano)
 
-    #Ajout du QRCode
+    #Ajout du QRCode : signature de nom prenom formation
     att_l, att_h = attestation.size
     info = nom.get()+prenom.get()+formation.get()
     infoEncoded = info.encode()
@@ -106,21 +113,10 @@ def genererDiplome(nom,prenom,formation):
     h = SHA512.new(infoEncoded)
     infoSigne = PKCS1_v1_5.new(key_priv).sign(h)
 
-    print('-------info non signe : '+str(info))
-    #infoSigne = rsa.sign(infoEncoded, key_priv, 'SHA-256')
-    print('+++++++info signee : '+str(infoSigne))
-    #test pour check si le verify fonctionne7
-
-    try: 
-        rsa.verify(infoEncoded, infoSigne, key_pub)
-    except:
-        print("Verify ERROR")
-    else:
-        print('Verify OK')
-        imgQR = qr.make(infoSigne, box_size=5, border=2)
-        offset = (1415,930)
-        attestation.paste(imgQR,offset)
-        attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
+    imgQR = qr.make(infoSigne, box_size=3, border=2)
+    offset = (1415,930)
+    attestation.paste(imgQR,offset)
+    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
 
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
 
@@ -128,7 +124,7 @@ def verifierDiplome():
     global emplacementFichier
     print(emplacementFichier)
     fichier = Image.open(open(emplacementFichier, 'rb'))
-    print(recuperer(fichier,64))
+    print(recuperer(fichier,10000))
 
 #Fonctions d'affichage
 def checkMail():
@@ -236,33 +232,3 @@ frameDecodage.grid(row=1,column=0,sticky="w")
 root.protocol("WM_DELETE_WINDOW", fermetureFenetre)
 checkMail()
 root.mainloop()
-
-"""
-print("Entrez votre OTP : ")
-otpEcole = input()
-
-if (True): #Ajouter l'application d'OTP
-    print("Accès accordé\n\nVeuillez entrer un prénom :")
-    prenom = input()
-    print("Veuillez entrer un nom : ")
-    nom = input()
-    print("Veuillez entrer la formation : ")
-    formation = input()
-    print("Attestation pour",prenom,nom,",", formation)
-    print("Entrez l'e-mail de",prenom,nom,":")
-    email=input()
-    print("Veuillez confirmer votre identité d'administrateur :")
-    otpAdmin=input()
-
-    attestation = Image.open("test.png")
-    draw = ImageDraw.Draw(attestation)
-    draw.text((500, 430),"CERTIFICAT DÉLIVRÉ",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
-    draw.text((860, 560),"À",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
-    draw.text((550, 680),"VIKEN TOPSAKAL",(0,0,0),font=ImageFont.truetype("algerian-condensed-std-regular.otf", 110))
-    attestation.save('sample-out.jpg')
-
-
-else:
-    print("Accès refusé")
-
-"""
