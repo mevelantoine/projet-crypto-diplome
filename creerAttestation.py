@@ -66,7 +66,7 @@ def recuperer(image,taille):
 
 ## Fonctions d'OTP
 def validate(window,root,otp):
-    #r = requests.get('http://192.168.1.97/verify?otp='+str(otp.get()))
+    #r = requests.get('http://127.0.0.1/verify?otp='+str(otp.get()))
     #if (r.status_code == 200):
     if (True):
          window.destroy()
@@ -111,10 +111,9 @@ def genererDiplome(nom,prenom,formation):
         imgQR = qr.make(infoSigne)
         offset = (1380,880)
         attestation.paste(imgQR,offset)
-        attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
+        attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.png')
 
-
-    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.jpg')
+    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.png')
 
 def verifierDiplome():
     global emplacementFichier

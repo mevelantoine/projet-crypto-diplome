@@ -17,17 +17,23 @@ appExpress.get("/token",function (req,res) {
 
 appExpress.get("/verify",function (req,res) {
   var i;
+  var isFound;
   console.log("verify")
-//  	for(i=0;i<hashes.length;i++){
-//	  if (req.query.hash == hashes[i]){
-//			console.log("oui");
-//			res.sendStatus(200);
-//		}
-//	}
-//	console.log("non");
-//	res.sendStatus(403);
+  	for(i=0;i<hashes.length;i++){
+	  if (req.query.hash == hashes[i]){
+			isFound=True 
+			res.sendStatus(200);
+		}
+	}
 
-  res.sendStatus(200)
+  if (isFound) {
+    console.log("oui");
+    res.sendStatus(200)
+  }
+  else{
+	  console.log("non");
+	  res.sendStatus(403);
+  }
 });
 
 appExpress.listen(80);
