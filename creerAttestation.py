@@ -2,7 +2,7 @@ import tkinter as tk
 import qrcode as qr
 import re
 import requests
-import subprocess
+import os
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -86,11 +86,11 @@ def genererDiplome(nom,prenom,formation):
     draw.text((550, 680),nom.get().upper()+" "+prenom.get().upper(),(0,0,0),font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
     draw.text((740, 820),formation.get().upper(),(0,0,0), font=ImageFont.truetype("assets/algerian-condensed-std-regular.otf", 110))
     
-    processQuery = subprocess.Popen(['openssl','ts','-query','-data','assets/template.png','-no_nonce','-sha512','-cert', '-out', 'file.tsq'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    processResponse = subprocess.Popen(['curl', '-H', '"Content-Type: application/timestamp-query"', '--data-binary', "'@file.tsq'",'https://freetsa.org/tsr', '-o' 'file.tsr' ],stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        
+    os.system('openssl ts -query -data assets/template.png -no_nonce -sha512 -cert -out file.tsq')
+    os.system('curl -H "Content-Type: application/timestamp-query" --output file.tsr --data-binary \'@file.tsq\' https://freetsa.org/tsr')
     strQuery = open("file.tsq","rb").read()
     strResponse = open("file.tsr","rb").read()
+    
     #Stéganographie : nom prenom formation timestamp
 
     bloc = nom.get()+" "+prenom.get()+formation.get()
@@ -98,6 +98,8 @@ def genererDiplome(nom,prenom,formation):
         bloc += "-"
     
     stegano =  str(strQuery) + "||" + str(strResponse)
+    global tailleStegano 
+    tailleStegano = len(stegano)
     print(len(strQuery),len(strResponse))
     cacher(attestation,stegano)
 
@@ -122,9 +124,11 @@ def genererDiplome(nom,prenom,formation):
 
 def verifierDiplome():
     global emplacementFichier
+    global tailleStegano
     print(emplacementFichier)
     fichier = Image.open(open(emplacementFichier, 'rb'))
-    print(recuperer(fichier,10000))
+    print(tailleStegano)
+    print(recuperer(fichier,tailleStegano))
 
 #Fonctions d'affichage
 def checkMail():
@@ -147,6 +151,7 @@ def choosefile():
 ##MAIN
 
 emplacementFichier=""
+global tailleStegano
 
 #Fenêtre racine
 root = tk.Tk()
