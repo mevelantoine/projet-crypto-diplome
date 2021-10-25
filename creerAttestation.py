@@ -89,14 +89,14 @@ def genererDiplome(nom,prenom,formation):
 
     #Stéganographie
     timestamp = str(int(time.time()))
-    stegano = nom.get()+prenom.get()+formation+timestamp
+    stegano = nom.get()+prenom.get()+formation.get()+timestamp
     while (len(stegano) < 64):
         stegano += "-"
     cacher(attestation,stegano)
 
     #Ajout du QRCode
     att_l, att_h = attestation.size
-    info = nom.get()+prenom.get()+formation
+    info = nom.get()+prenom.get()+formation.get()
     infoEncoded = info.encode()
 
     key_pub = RSA.importKey(open("certificates/newcert.pem", "r").read(), passphrase="test")
@@ -120,9 +120,9 @@ def genererDiplome(nom,prenom,formation):
         imgQR = qr.make(infoSigne, box_size=5, border=2)
         offset = (1415,930)
         attestation.paste(imgQR,offset)
-        attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.png')
+        attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
 
-    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation+'.png')
+    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
 
 def verifierDiplome():
     global emplacementFichier
@@ -187,13 +187,20 @@ prenom = tk.StringVar()
 textPrenom=tk.Label(frameCreation,text="Prénom :")
 inputPrenom = tk.Entry(frameCreation,textvariable=prenom)
 
-#formation = tk.StringVar()
-optionsFormations=['ING1-GI', 'ING1-GM',"ING2-GSI", "ING2-SIE","ING3-CS","ING3-INEM","ING3-VISUAL"]
+formation = tk.StringVar()
+def getElement(event):
+  selection = event.widget.curselection()
+  index = selection[0]
+  value = event.widget.get(index)
+  formation.set(value)
+  print(index,' -> ',value)
+
 textFormations = tk.Label(frameCreation,text="Formation : ")
 #dropFormations = tk.OptionMenu(frameCreation, formation, *optionsFormations)
-listbox = tk.Listbox(frameCreation)
-listbox.insert(tk.END, *optionsFormations)
-formation = listbox.get(tk.ACTIVE)
+listeOptions = tk.StringVar()
+listeOptions.set(('ING1-GI', 'ING1-GM',"ING2-GSI", "ING2-SIE","ING3-CS","ING3-INEM","ING3-VISUAL"))
+listbox = tk.Listbox(frameCreation, listvariable=listeOptions)
+listbox.bind("<<ListboxSelect>>", getElement)
 
 mail = tk.StringVar()
 textMail = tk.Label(frameCreation,text="Adresse e-mail :",pady=30)
