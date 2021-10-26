@@ -4,6 +4,7 @@ import re
 import requests
 import os
 import base64
+import smtplib
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -13,7 +14,7 @@ from Crypto.Signature import PKCS1_v1_5
 from functools import partial
 from tkinter.filedialog import askopenfilename
 from tkinter.constants import CENTER
-from tkinter import messagebox
+from tkinter import Pack, Toplevel, messagebox
 
 ##FONCTIONS
 #Fonctions de stéganographie
@@ -67,17 +68,41 @@ def recuperer(image,taille):
 
 
 ## Fonctions d'OTP
-def validate(window,root,otp):
-    #r = requests.get('http://127.0.0.1/verify?otp='+str(otp.get()))
-    #if (r.status_code == 200):
-    if (True):
-         window.destroy()
-         root.lift()
+def validerOTP(windowToClose,windowToOpen,otp):
+    r = requests.get('http://127.0.0.1/verify?otp='+str(otp.get()))
+    if (r.status_code == 200):
+         windowToClose.destroy()
+         windowToOpen.lift()
     else:
         tk.messagebox.showerror(title="Erreur", message="OTP non valide")
 
+def validerOTPPassphrase(windowToClose,otp,passphraseInput):
+    #Cette fonction est exactement la même que validerOTP, sauf qu'elle modifie une variable supplémentaire
+    r = requests.get('http://127.0.0.1/verify?otp='+str(otp.get()))
+    if (r.status_code == 200):
+            windowToClose.destroy()
+            global passphrase
+            passphrase = passphraseInput
+            genererDiplome(nom,prenom,formation)
+    else:
+        tk.messagebox.showerror(title="Erreur", message="OTP non valide")
+
+    
+def inputOTPPassphrase():
+    otp = tk.IntVar()
+    passphrase = tk.StringVar()
+    otpPassWindow = tk.Toplevel(root)
+    otpPassWindow.attributes('-topmost', True)
+    labelOTP = tk.Label(otpPassWindow,text="Entrez votre OTP :").pack()
+    inputOTP = tk.Entry(otpPassWindow,textvariable=otp).pack()
+    labelPassphrase = tk.Label(otpPassWindow, text="Entrez votre passphrase").pack()
+    inputPassphrase = tk.Entry(otpPassWindow,textvariable=passphrase).pack()
+    boutonValiderOTPPassphrase = tk.Button(otpPassWindow,text="Valider",command=partial(validerOTPPassphrase,otpPassWindow,otp,passphrase)).pack()
+
+
 #Fonctions de génération d'image
 def genererDiplome(nom,prenom,formation):
+
     attestation = Image.open("assets/template.png")
     draw = ImageDraw.Draw(attestation)
 
@@ -98,7 +123,7 @@ def genererDiplome(nom,prenom,formation):
     while (len(bloc) < 64):
         bloc += "-"
     
-    stegano =  str(strQuery) + "||" + str(strResponse)
+    stegano = bloc + str(strQuery) + "||" + str(strResponse)
     global tailleStegano 
     tailleStegano = len(stegano)
     print(len(strQuery),len(strResponse))
@@ -112,7 +137,7 @@ def genererDiplome(nom,prenom,formation):
     key_pub = RSA.importKey(open("certificates/newcert.pem", "r").read(), passphrase="test")
 
     key_priv = RSA.importKey(open("certificates/newkey.pem", "r").read(), passphrase="test")
-
+    
     h = SHA512.new(infoEncoded)
     infoSigne = PKCS1_v1_5.new(key_priv).sign(h)
 
@@ -121,17 +146,21 @@ def genererDiplome(nom,prenom,formation):
     attestation.paste(imgQR,offset)
     attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
 
-    attestation.save("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png')
-
+    attestation.close()
+    
     attestationToEncode = open("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png', "rb").read()
-    attestationEncoded = base64.b64decode(attestationToEncode)
+    attestationEncoded = base64.b64encode(attestationToEncode)
     contenu = open("contenu.txt", "w")
-    contenu.write("Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\n\r\n"+str(attestationEncoded))
+    contenu.write("Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=""diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png'"\r\n"+str(attestationEncoded))
     contenu.close()
-    #server = smtplib.SMTP_SSL()
-    #server.sendmail("diplome@gmail.com", "vtopsakalvi@cy-tech.fr", message_securise)
-    #server.quit()
-
+    os.system('cat contenu.txt | openssl smime -signer certificates/newcert.pem -from \'diplomecytech@gmail.com\' -to \'antoinemevel8@gmail.com\' -subject "Envoi avec signature" -sign -inkey certificates/newkey.pem -passin pass:'+passphrase.get()+' -out contenu_courrier.txt')
+    
+    server = smtplib.SMTP_SSL('smtp.gmail.com',465)
+    server.ehlo()
+    server.login('diplomecytech@gmail.com', 'diplomecytech2021')
+    #server.sendmail("diplome@cy-tech.fr", "antoinemevel8@gmail.com", open("contenu_courrier.txt","r").read())
+    server.quit()
+    
 def verifierDiplome():
     global emplacementFichier
     global tailleStegano
@@ -161,12 +190,13 @@ def choosefile():
 ##MAIN
 
 emplacementFichier=""
+passphrase=""
 global tailleStegano
 
 #Fenêtre racine
 root = tk.Tk()
 root.title("Application de création de diplôme")
-root.geometry("1600x900+0+0")
+root.geometry("400x550+0+0")
 isOpen=True
 
 frameCreation = tk.LabelFrame(relief=tk.RIDGE,borderwidth=5,padx=10,pady=10,text="Création de diplôme")
@@ -180,7 +210,7 @@ otpWindow.attributes('-topmost', True)
 otp = tk.IntVar()
 textOTP = tk.Label(otpWindow,text="Entrez votre OTP")
 inputOTP = tk.Entry(otpWindow,textvariable=otp)
-buttonOTP = tk.Button(otpWindow,text="Valider",command=partial(validate,otpWindow,root,otp))
+buttonOTP = tk.Button(otpWindow,text="Valider",command=partial(validerOTP,otpWindow,root,otp))
 
 textOTP.place(relx=0.5, rely=0.1, anchor=CENTER)
 inputOTP.place(relx=0.5, rely=0.25, anchor=CENTER)
@@ -217,7 +247,7 @@ mail = tk.StringVar()
 textMail = tk.Label(frameCreation,text="Adresse e-mail :",pady=30)
 inputMail = tk.Entry(frameCreation,textvariable=mail)
 
-buttonValider = tk.Button(frameCreation,text="Valider",command=partial(genererDiplome,nom,prenom,formation))
+buttonValider = tk.Button(frameCreation,text="Valider",command=partial(inputOTPPassphrase))
 
 nomFichier = ""
 textChoisir = tk.Label(frameDecodage,text="Choisissez un diplôme à vérifier")

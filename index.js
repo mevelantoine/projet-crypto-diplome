@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const { timeStamp } = require("console");
 const crypto = require("crypto");
 const base32 = require("hi-base32");
+const { type } = require("os");
 
 function generateSecret(length = 20) {
   const randomBuffer = crypto.randomBytes(length);
@@ -43,7 +44,8 @@ function verifyTOTP(token, secret, window = 1) {
 
   for (let errorWindow = -window; errorWindow <= +window; errorWindow++) {
     const totp = generateTOTP(secret, errorWindow);
-    if (token === totp) {
+    console.log(totp)
+    if (token == totp) {
       return true;
     }
   }
@@ -64,34 +66,26 @@ function dynamicTruncationFn(hmacValue) {
 
 const appExpress = express();
 
-secret = generateSecret();
+const secret = generateSecret();
+const window = 4;
 
 appExpress.get("/token", function (req, res) {
   console.log("token");
   var currentDate = new Date();
 
-  var token = generateTOTP(secret, 2);
+  var token = generateTOTP(secret, window);
 
   res.send(token.toString());
 });
 
 appExpress.get("/verify", function (req, res) {
-  var i;
-  var isFound;
   console.log("verify");
-  for (i = 0; i < hashes.length; i++) {
-    if (req.query.hash == hashes[i]) {
-      isFound = True;
-      res.sendStatus(200);
-    }
+  console.log(req.query.otp)
+  if (verifyTOTP(req.query.otp,secret,window)){
+    res.sendStatus(200)
   }
-
-  if (isFound) {
-    console.log("oui");
-    res.sendStatus(200);
-  } else {
-    console.log("non");
-    res.sendStatus(403);
+  else{
+    res.sendStatus(403)
   }
 });
 
