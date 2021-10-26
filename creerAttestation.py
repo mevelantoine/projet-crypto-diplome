@@ -175,6 +175,8 @@ def checkMail():
         inputMail.config(background="#3AC9A4")
     else:
         inputMail.config(background="#FF5252")
+    if isOpen: #On ne lance pas d'alarme si l'application est fermée
+        root.after(500,checkMail)
 
 def fermetureFenetre():
     isOpen=False
