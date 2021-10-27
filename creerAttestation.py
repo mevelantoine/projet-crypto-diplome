@@ -149,11 +149,11 @@ def genererDiplome(nom,prenom,formation):
     attestation.close()
     
     attestationToEncode = open("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png', "rb").read()
-    attestationEncoded = base64.b64encode(attestationToEncode)
+    #attestationEncoded = base64.b64encode(attestationToEncode)
     contenu = open("contenu.txt", "w")
-    contenu.write("Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\n\r\n"+str(attestationEncoded))
+    contenu.write("Content-Type: image/png\r\n\r\n"+str(attestationToEncode))
     contenu.close()
-    os.system('cat contenu.txt | openssl smime -signer certificates/newcert.pem -from \'diplomecytech@gmail.com\' -to \''+mail.get()+'\' -subject "Envoi avec signature" -sign -inkey certificates/newkey.pem -passin pass:'+passphrase.get()+' -out contenu_courrier.txt')
+    os.system('cat contenu.txt | openssl smime -signer certificates/newcert.pem -from \'diplomecytech@gmail.com\' -to \''+mail.get()+'\' -subject "Diplome de '+prenom.get()+' '+nom.get()+' delivre par CY Tech" -sign -inkey certificates/newkey.pem -passin pass:'+passphrase.get()+' -out contenu_courrier.txt')
 
     reciever = mail.get()
     server = smtplib.SMTP_SSL('smtp.gmail.com',465)
