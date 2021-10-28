@@ -75,7 +75,25 @@ appExpress.get("/token", function (req, res) {
 
   var token = generateTOTP(secret, window);
 
-  res.send(token.toString());
+  res.send("<!DOCTYPE html>\
+    <html>\
+    <head>\
+    <title>OTP</title>\
+    <style>\
+    h1 {\
+        text-align: center;\
+        font-size: 75px;\
+        color: white;\
+        background-color: grey\
+    }\
+    </style>\
+    </head>\
+    <body>\
+    \
+    <h1>Votre OTP est : "+token.toString()+"</h1>\
+    \
+    </body>\
+    </html>");
 });
 
 appExpress.get("/verify", function (req, res) {
