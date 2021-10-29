@@ -222,12 +222,12 @@ def choosefile():
 
 emplacementFichier=""
 passphrase=""
-tailleStegano = 14222
+tailleStegano = 14261
 
 #Fenêtre racine
 root = tk.Tk()
 root.title("Application de création de diplôme")
-root.geometry("400x550+0+0")
+root.geometry("")
 isOpen=True
 
 frameCreation = tk.LabelFrame(relief=tk.RIDGE,borderwidth=5,padx=10,pady=10,text="Création de diplôme")
