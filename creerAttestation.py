@@ -91,6 +91,7 @@ def validerOTPPassphrase(windowToClose,otp,passphraseInput):
     else:
         tk.messagebox.showerror(title="Erreur", message="OTP non valide")
 
+
     
 def inputOTPPassphrase():
     otp = tk.IntVar()
@@ -123,14 +124,13 @@ def genererDiplome(nom,prenom,formation):
     
     #Stéganographie : nom prenom formation timestamp
 
-    bloc = nom.get()+" "+prenom.get()+formation.get()
+    bloc = nom.get()+"||"+prenom.get()+ "||"+formation.get()
     while (len(bloc) < 64):
         bloc += "-"
     
-    stegano = bloc + str(strQuery) + "||" + str(strResponse)
+    stegano = bloc + "||" + str(strQuery) + "||" + str(strResponse)
     global tailleStegano 
-    tailleStegano = len(stegano)
-    print(tailleStegano)
+    tailleStegano = len("||" + str(strQuery) + "||" + str(strResponse)) +66
     cacher(attestation,stegano)
 
     #Ajout du QRCode : signature de nom prenom formation
@@ -186,17 +186,30 @@ def genererDiplome(nom,prenom,formation):
 def verifierDiplome():
     global emplacementFichier
     global tailleStegano
-    fichier = Image.open(open(emplacementFichier, 'rb'))
-    stegBloc=recuperer(fichier,tailleStegano)[:64]
-    stegQuery=recuperer(fichier,tailleStegano)[64:].split("||")[0]
-    stegResponse=recuperer(fichier,tailleStegano)[64:].split("||")[1]
-    fQuery = open("test.tsq","wb")
-    fQuery.write(codecs.encode(stegQuery.encode().decode('unicode_escape'), "raw_unicode_escape"))
-    fQuery.close()
-    fResponse = open("test.tsr","wb")
-    fResponse.write(codecs.encode(stegResponse.encode().decode('unicode_escape'), "raw_unicode_escape"))
+    
+    fichier = Image.open(emplacementFichier)
+    stegBloc=recuperer(fichier,tailleStegano)
+    stegQuery=recuperer(fichier,tailleStegano).split("||")[3]
+    stegResponse=recuperer(fichier,tailleStegano).split("||")[4]
+    
+    stegQuery = stegQuery[2:-1]
+    tsq_bytes = codecs.encode(stegQuery.encode().decode('unicode_escape'), "raw_unicode_escape")
+    final_tsq = tsq_bytes.split(b'\n')
+    tsq_out = open("test.tsq", "wb")
+    for i in range(len(final_tsq)):
+        tsq_out.write(final_tsq[i])
+        tsq_out.write(bytes('\n', 'MacCyrillic'))
+    tsq_out.close()
+
+    stegResponse = stegResponse[2:]
+    tsr_bytes = codecs.encode(stegResponse.encode().decode('unicode_escape'), "raw_unicode_escape")
+    final_tsr = tsr_bytes.split(b'\n')
+    tsr_out = open("test.tsr", "wb")
+    for i in range(len(final_tsr)):
+        tsr_out.write(final_tsr[i])
+        tsr_out.write(bytes('\n', 'Windows-1252'))
+    tsr_out.close()
     os.system("openssl ts -verify -in test.tsr -queryfile test.tsq -CAfile cacert.pem -untrusted tsa.crt")
-    print(stegBloc)
 
 #Fonctions d'affichage
 def checkMail():
