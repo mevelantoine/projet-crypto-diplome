@@ -5,6 +5,7 @@ import requests
 import os
 import base64
 import smtplib
+import codecs
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -129,7 +130,7 @@ def genererDiplome(nom,prenom,formation):
     stegano = bloc + str(strQuery) + "||" + str(strResponse)
     global tailleStegano 
     tailleStegano = len(stegano)
-    print(len(strQuery),len(strResponse))
+    print(tailleStegano)
     cacher(attestation,stegano)
 
     #Ajout du QRCode : signature de nom prenom formation
@@ -137,9 +138,9 @@ def genererDiplome(nom,prenom,formation):
     info = nom.get()+prenom.get()+formation.get()
     infoEncoded = info.encode()
 
-    key_pub = RSA.importKey(open("certificates/newcert.pem", "r").read(), passphrase="test")
+    key_pub = RSA.importKey(open("certs/newcert.pem", "r").read(), passphrase="test")
 
-    key_priv = RSA.importKey(open("certificates/newkey.pem", "r").read(), passphrase="test")
+    key_priv = RSA.importKey(open("certs/newkey.pem", "r").read(), passphrase="test")
     
     h = SHA512.new(infoEncoded)
     infoSigne = PKCS1_v1_5.new(key_priv).sign(h)
@@ -156,7 +157,7 @@ def genererDiplome(nom,prenom,formation):
     contenu = open("contenu.txt", "w")
     contenu.write("Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\n\r\n"+str(attestationEncoded))
     contenu.close()
-    os.system('cat contenu.txt | openssl smime -signer certificates/newcert.pem -from \'diplomecytech@gmail.com\' -to \''+mail.get()+'\' -subject "Diplome de '+prenom.get()+' '+nom.get()+' delivre par CY Tech" -sign -inkey certificates/newkey.pem -passin pass:'+passphrase.get()+' -out contenu_courrier.txt')
+    os.system('cat contenu.txt | openssl smime -signer certs/newcert.pem -from \'diplomecytech@gmail.com\' -to \''+mail.get()+'\' -subject "Diplome de '+prenom.get()+' '+nom.get()+' delivre par CY Tech" -sign -inkey certs/newkey.pem -passin pass:'+passphrase.get()+' -out contenu_courrier.txt')
 
     reciever = mail.get()
     server = smtplib.SMTP_SSL('smtp.gmail.com',465)
@@ -185,10 +186,17 @@ def genererDiplome(nom,prenom,formation):
 def verifierDiplome():
     global emplacementFichier
     global tailleStegano
-    print(emplacementFichier)
     fichier = Image.open(open(emplacementFichier, 'rb'))
-    print(tailleStegano)
-    print(recuperer(fichier,tailleStegano))
+    stegBloc=recuperer(fichier,tailleStegano)[:64]
+    stegQuery=recuperer(fichier,tailleStegano)[64:].split("||")[0]
+    stegResponse=recuperer(fichier,tailleStegano)[64:].split("||")[1]
+    fQuery = open("test.tsq","wb")
+    fQuery.write(codecs.encode(stegQuery.encode().decode('unicode_escape'), "raw_unicode_escape"))
+    fQuery.close()
+    fResponse = open("test.tsr","wb")
+    fResponse.write(codecs.encode(stegResponse.encode().decode('unicode_escape'), "raw_unicode_escape"))
+    os.system("openssl ts -verify -in test.tsr -queryfile test.tsq -CAfile cacert.pem -untrusted tsa.crt")
+    print(stegBloc)
 
 #Fonctions d'affichage
 def checkMail():
@@ -214,7 +222,7 @@ def choosefile():
 
 emplacementFichier=""
 passphrase=""
-global tailleStegano
+tailleStegano = 14222
 
 #Fenêtre racine
 root = tk.Tk()
