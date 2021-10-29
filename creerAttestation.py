@@ -15,6 +15,9 @@ from functools import partial
 from tkinter.filedialog import askopenfilename
 from tkinter.constants import CENTER
 from tkinter import Pack, Toplevel, messagebox
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 
 ##FONCTIONS
 #Fonctions de stéganographie
@@ -149,9 +152,9 @@ def genererDiplome(nom,prenom,formation):
     attestation.close()
     
     attestationToEncode = open("diplomes/"+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png', "rb").read()
-    #attestationEncoded = base64.b64encode(attestationToEncode)
+    attestationEncoded = base64.b64encode(attestationToEncode)
     contenu = open("contenu.txt", "w")
-    contenu.write("Content-Type: image/png\r\n\r\n"+str(attestationToEncode))
+    contenu.write("Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\n\r\n"+str(attestationEncoded))
     contenu.close()
     os.system('cat contenu.txt | openssl smime -signer certificates/newcert.pem -from \'diplomecytech@gmail.com\' -to \''+mail.get()+'\' -subject "Diplome de '+prenom.get()+' '+nom.get()+' delivre par CY Tech" -sign -inkey certificates/newkey.pem -passin pass:'+passphrase.get()+' -out contenu_courrier.txt')
 
@@ -160,6 +163,24 @@ def genererDiplome(nom,prenom,formation):
     server.login('diplomecytech@gmail.com', 'diplomecytech2021')
     server.sendmail("diplome@cy-tech.fr", reciever, open("contenu_courrier.txt","r").read())
     server.quit()
+
+    with open('diplomes/'+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png', 'rb') as f:
+        img_data = f.read()
+
+        msg = MIMEMultipart()
+        msg['Subject'] = 'Diplome de '+prenom.get()+' '+nom.get()+' delivre par CY Tech'
+        msg['From'] = 'diplomecytech@gmail.com'
+        msg['To'] = reciever
+
+        text = MIMEText("Diplome non encodé en base64")
+        msg.attach(text)
+        image = MIMEImage(img_data, name=os.path.basename('diplomes/'+nom.get()+prenom.get()+'Diplome'+formation.get()+'.png'))
+        msg.attach(image)
+
+        server2 = smtplib.SMTP_SSL('smtp.gmail.com',465)
+        server2.login('diplomecytech@gmail.com', 'diplomecytech2021')
+        server2.sendmail("diplomescytech@gmail.com", mail.get(), msg.as_string())
+        server2.quit()
     
 def verifierDiplome():
     global emplacementFichier
